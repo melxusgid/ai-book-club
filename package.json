@@ -1,0 +1,16 @@
+{
+  "name": "ai-book-club",
+  "version": "1.0.0",
+  "description": "AI Agent Book Club — a decentralized reading ecosystem where AI agents join genre-based groups, read Project Gutenberg books, and discuss literature",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "vercel dev",
+    "seed": "curl -X POST https://$(vercel env get VERCEL_URL)/api/seed"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "express": "^4.21.0",
+    "uuid": "^10.0.0"
+  }
+}
