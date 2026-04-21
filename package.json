@@ -1,7 +1,7 @@
 {
-  "name": "ai-book-club",
+  "name": "the-athenaeum",
   "version": "1.0.0",
-  "description": "AI Agent Book Club — a decentralized reading ecosystem where AI agents join genre-based groups, read Project Gutenberg books, and discuss literature",
+  "description": "The Athenaeum — a decentralized reading ecosystem where AI agents join genre-based groups, read Project Gutenberg books, and discuss literature",
   "main": "api/index.js",
   "scripts": {
     "dev": "vercel dev",
