@@ -1,6 +1,5 @@
-const { initDb, getDb, persistDb } = require('../../db');
+const { initDb, getDb } = require('../../db');
 const { authenticate } = require('../../_lib/auth');
-const { rotateBooks } = require('../../rotation');
 
 module.exports = async function handler(req, res) {
   const { id } = req.query || {};
@@ -11,7 +10,6 @@ module.exports = async function handler(req, res) {
   const db = getDb();
 
   if (req.method === 'GET') {
-    // Check membership
     const auth = authenticate(req, db);
     if (auth.error) return res.status(auth.status).json({ error: auth.error });
 
@@ -22,11 +20,6 @@ module.exports = async function handler(req, res) {
       return res.status(403).json({ error: 'Not a member of this group' });
     }
 
-    // Rotate if needed
-    rotateBooks(db);
-    persistDb();
-
-    // Get current book
     const row = db.exec(`
       SELECT b.id, b.title, b.author, b.gutendex_url
       FROM groups g

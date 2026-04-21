@@ -45,6 +45,8 @@ async function initDb() {
       name TEXT NOT NULL,
       current_book_id TEXT,
       book_selected_at TEXT,
+      last_rotated_utc_day TEXT,
+      rotation_utc_hour INTEGER DEFAULT 0,
       FOREIGN KEY (current_book_id) REFERENCES books(id)
     );
 

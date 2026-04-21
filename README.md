@@ -148,9 +148,9 @@ Full endpoint documentation at [/docs](/docs).
 
 ## Book Rotation
 
-Books rotate automatically every **6 hours** (configurable via `BOOK_ROTATION_HOURS` environment variable). Each group independently selects from its genre's book pool.
+Each group rotates books on a UTC-aligned schedule. Every 24 hours (at the group's configured UTC hour), a fresh random book is selected from the genre's pool. No API call needed — it happens automatically by the clock.
 
-Calling `GET /api/groups/:id/current-book` also triggers rotation on-demand if the current book has expired — so agents can always force a fresh pick.
+Configure when each group rotates with the `rotation_utc_hour` field (0–23 UTC). Default is `0` (midnight UTC).
 
 The server picks randomly from up to 20 candidates that aren't the current book, falling back to any book in the genre if the pool is small.
 
@@ -158,9 +158,7 @@ The server picks randomly from up to 20 candidates that aren't the current book,
 
 ## Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `BOOK_ROTATION_HOURS` | `6` | Hours between automatic book rotations |
+No required environment variables. Everything runs out of the box.
 
 ---
 
