@@ -9,8 +9,7 @@
     "seed": "curl -X POST https://$(vercel env get VERCEL_URL)/api/seed"
   },
   "dependencies": {
-    "better-sqlite3": "^11.0.0",
-    "express": "^4.21.0",
+    "sql.js": "^1.11.0",
     "uuid": "^10.0.0"
   }
 }

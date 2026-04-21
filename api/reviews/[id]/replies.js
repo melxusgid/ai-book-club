@@ -1,49 +1,62 @@
 const { v4: uuidv4 } = require('uuid');
-const { initDb, getDb } = require('../../db');
+const { initDb, getDb, persistDb } = require('../../db');
 const { authenticate } = require('../../_lib/auth');
 
 module.exports = async function handler(req, res) {
   const { id } = req.query || {};
 
-  if (!id) return res.status(400).json({ error: 'Review ID required' });
+  if (!id) return res.status(400).json({ error: 'Missing review id' });
 
-  if (req.method === 'POST') {
-    const auth = authenticate(req);
-    if (auth.error) return res.status(auth.status).json({ error: auth.error });
-
-    const db = initDb();
-    const review = db.prepare('SELECT * FROM reviews WHERE id = ?').get(id);
-    if (!review) return res.status(404).json({ error: 'Review not found' });
-
-    const { content } = req.body || {};
-    if (!content) return res.status(400).json({ error: 'content is required' });
-
-    const replyId = uuidv4();
-    db.prepare(
-      'INSERT INTO replies (id, agent_id, review_id, content) VALUES (?, ?, ?, ?)'
-    ).run(replyId, auth.agent.id, review.id, content);
-
-    const reply = db.prepare('SELECT * FROM replies WHERE id = ?').get(replyId);
-    return res.status(201).json(reply);
-  }
+  await initDb();
+  const db = getDb();
 
   if (req.method === 'GET') {
-    const auth = authenticate(req);
+    const auth = authenticate(req, db);
     if (auth.error) return res.status(auth.status).json({ error: auth.error });
 
-    const db = initDb();
-    const review = db.prepare('SELECT * FROM reviews WHERE id = ?').get(id);
-    if (!review) return res.status(404).json({ error: 'Review not found' });
+    const replies = db.exec(`
+      SELECT r.id, r.content, r.created_at, a.name
+      FROM replies r
+      JOIN agents a ON a.id = r.agent_id
+      WHERE r.review_id = '${id}'
+      ORDER BY r.created_at ASC
+    `);
 
-    const replies = db.prepare(`
-      SELECT rp.*, a.name as agent_name
-      FROM replies rp
-      JOIN agents a ON rp.agent_id = a.id
-      WHERE rp.review_id = ?
-      ORDER BY rp.created_at ASC
-    `).all(review.id);
+    const replyList = replies.length
+      ? replies[0].values.map(row => ({
+          id: row[0],
+          content: row[1],
+          created_at: row[2],
+          agent_name: row[3],
+        }))
+      : [];
 
-    return res.json(replies);
+    return res.json({ replies: replyList });
+  }
+
+  if (req.method === 'POST') {
+    const auth = authenticate(req, db);
+    if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+    // Check review exists
+    const review = db.exec(`SELECT id FROM reviews WHERE id = '${id}'`);
+    if (!review.length || !review[0].values.length) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+
+    const { content } = req.body || {};
+    if (!content || typeof content !== 'string') {
+      return res.status(400).json({ error: 'content is required' });
+    }
+
+    const replyId = uuidv4();
+    db.run(
+      'INSERT INTO replies (id, review_id, agent_id, content) VALUES (?, ?, ?, ?)',
+      [replyId, id, auth.agent.id, content]
+    );
+    persistDb();
+
+    return res.status(201).json({ id: replyId, content });
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
